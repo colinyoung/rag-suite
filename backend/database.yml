@@ -1,0 +1,8 @@
+---
+development:
+  adapter: postgresql
+  database: postgres
+  username: postgres
+  password: postgres
+  host: localhost
+  port: 65432

@@ -1,0 +1,13 @@
+version: "3.7"
+services:
+  postgres:
+    image: postgres:15.5
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_INITDB_ARGS="--encoding=UTF-8"
+    volumes:
+      - ./tmp/postgres-data/15:/var/lib/postgresql/data
+    ports:
+      - 65432:5432

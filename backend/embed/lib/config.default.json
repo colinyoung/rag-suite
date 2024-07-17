@@ -1,0 +1,11 @@
+{
+  "load": {
+    "table_name": "posts",
+    "column_names": {
+      "body": "body",
+      "link": "link",
+      "title": "title"
+    },
+    "chunk_max_length": 1500
+  }
+}

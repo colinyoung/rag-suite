@@ -17,9 +17,10 @@ with open('database.yml', 'r') as f:
 
         for item in json:
             insert_post = sql.SQL(
-                "INSERT INTO posts (title, link) VALUES ({title}, {link}) RETURNING id").format(
+                "INSERT INTO posts (title, link, content) VALUES ({title}, {link}, {content}) RETURNING id").format(
                 title=sql.Literal(item['title']),
-                link=sql.Literal(item['link'])
+                link=sql.Literal(item['link']),
+                content=sql.Literal('\n'.join(item['content']))
             )
             cur.execute(insert_post)
             inserted_id = cur.fetchone()[0]

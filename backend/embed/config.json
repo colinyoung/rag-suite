@@ -1,0 +1,8 @@
+{
+  "load": {
+    "table_name": "posts",
+    "column_names": {
+      "body": "content"
+    }
+  }
+}

@@ -5,7 +5,8 @@ name = "pypi"
 
 [packages]
 pyyaml = "*"
-psycopg2 = "*"
+psycopg = {extras = ["binary"], version = "*"}
+python-dotenv = "*"
 
 [dev-packages]
 

@@ -1,33 +1,40 @@
-const { Client } = require("pg");
+const pg = require("pg");
+const openai = require("openai");
 const _ = require("lodash");
 
 // Retrieve the DATABASE_URL from the environment variables
 const connectionString = process.env.DATABASE_URL;
 
 // Create a new PostgreSQL client
-const client = new Client({
+const client = new pg.Client({
   connectionString,
 });
 
-const defaultConfig = Object.freeze(require("./config.default.json"));
+const openaiClient = new openai.OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 // Connect to the database
-const handler = async (overrides) => {
+const handler = async (config) => {
   try {
     await client.connect();
 
-    const config = _.defaultsDeep(overrides, defaultConfig.load);
+    const loadConfig = config.load;
 
     // iterate all posts
     const posts = await client.query(
-      `SELECT id, ${config.column_names.title} as title, ${config.column_names.link} as link, ${config.column_names.body} as body FROM ${config.table_name}`
+      `SELECT id, ${loadConfig.column_names.title} as title, ${loadConfig.column_names.link} as link, ${loadConfig.column_names.body} as body FROM ${loadConfig.table_name}`
     );
 
-    posts.rows.forEach(async (post) => {
+    for (const post of posts.rows) {
       // perform chunking
-      const chunks = chunkPost(post, config.chunk_max_length);
-      generateEmbeddings(chunks);
-    });
+      const chunks = chunkPost(post, loadConfig.chunk_max_length);
+      for (const chunk of chunks) {
+        const embedding = await generateEmbedding(chunk, config);
+        const sql = `INSERT INTO ${config.embeddings.table_name} (post_id, vector) VALUES ($1, $2)`;
+        await client.query(sql, [post.id, JSON.stringify(embedding.vector)]);
+      }
+    }
     await client.end();
   } catch (err) {
     console.error("Error connecting to the database", err);
@@ -53,6 +60,13 @@ function chunkPost(post, max_length) {
   return chunks;
 }
 
-function generateEmbeddings(chunks) {
-  chunks.forEach((chunk) => {});
+async function generateEmbedding(chunk, options) {
+  // openai generate embeddings and return vectors
+  const embedding = await openaiClient.embeddings.create({
+    model: options.embeddings.model,
+    input: chunk,
+  });
+  return {
+    vector: embedding.data[0].embedding,
+  };
 }

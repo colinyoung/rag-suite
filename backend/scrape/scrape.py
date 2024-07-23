@@ -1,5 +1,6 @@
-# load xml from https://blog.cleanfi.com/
+# load xml from https://yourblog.example/feed/
 
+import sys
 import requests
 import xmltodict
 import json
@@ -9,8 +10,7 @@ from bs4 import BeautifulSoup
 import re
 
 
-def get_posts():
-    url = "https://blog.cleanfi.com/feed/"
+def get_posts(url):
     r = requests.get(url)
     return r.text
 
@@ -32,7 +32,7 @@ def paragraphs(content):
 
 
 def main():
-    xml = get_posts()
+    xml = get_posts(sys.argv[1])
     posts = parse_posts(xml)
 
     items = jq.compile(
@@ -49,7 +49,7 @@ def main():
             'content': content
         })
 
-    with open('scrapes/cleanfi.json', 'w') as f:
+    with open('scrapes/scraped.json', 'w') as f:
         json.dump(parsed, f, ensure_ascii=False)
 
 

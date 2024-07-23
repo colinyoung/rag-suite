@@ -1,27 +1,17 @@
-import yaml
 import os
-import psycopg2
+import psycopg
+import dotenv
 
-environment = 'production' if os.environ.get(
-    'ENV') == 'production' else 'development'
-
-
-def parse_env(database):
-    return {
-        'user': database['username'],
-        'password': database['password'],
-        'host': database['host'],
-        'port': database['port'],
-        'dbname': database['database']
-    }
+dotenv.load_dotenv()
 
 
-def connect(fname='./database.yml'):
-    with open(fname, 'r', encoding='utf-8') as f:
-        database = yaml.load(f, Loader=yaml.FullLoader)
-        env = parse_env(database[environment])
+def parse_env(url):
+    return psycopg.conninfo.conninfo_to_dict(url)
 
-        # connect to database with psycopg2
-        conn = psycopg2.connect(**env)
-        conn.set_client_encoding('utf-8')
-        return conn
+
+def connect(database_url=os.environ.get('DATABASE_URL')):
+    env = parse_env(database_url)
+
+    # connect to database with psycopg
+    conn = psycopg.connect(**env)
+    return conn

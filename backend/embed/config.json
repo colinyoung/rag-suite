@@ -2,7 +2,13 @@
   "load": {
     "table_name": "posts",
     "column_names": {
-      "body": "content"
-    }
+      "body": "content",
+      "link": "link",
+      "title": "title"
+    },
+    "chunk_max_length": 1500
+  },
+  "embeddings": {
+    "model": "text-embedding-3-small"
   }
 }

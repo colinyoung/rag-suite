@@ -31,8 +31,12 @@ const handler = async (config) => {
       const chunks = chunkPost(post, loadConfig.chunk_max_length);
       for (const chunk of chunks) {
         const embedding = await generateEmbedding(chunk, config);
-        const sql = `INSERT INTO ${config.embeddings.table_name} (post_id, vector) VALUES ($1, $2)`;
-        await client.query(sql, [post.id, JSON.stringify(embedding.vector)]);
+        const sql = `INSERT INTO ${config.embeddings.table_name} (source_id, _namespace, vector) VALUES ($1, $2, $3)`;
+        await client.query(sql, [
+          post.id,
+          "posts",
+          JSON.stringify(embedding.vector),
+        ]);
       }
     }
     await client.end();

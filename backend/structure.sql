@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS chunks (
 );
 CREATE TABLE IF NOT EXISTS embeddings (
     id SERIAL PRIMARY KEY,
-    post_id INTEGER,
+    source_id INTEGER,
+    _namespace VARCHAR(255),
     vector vector(1536),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

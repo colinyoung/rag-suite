@@ -19,16 +19,18 @@ def parse_posts(xml):
     return xmltodict.parse(xml)
 
 
-def paragraphs(content):
-    soup = BeautifulSoup(content, 'html.parser')
-    paragraphs = soup.find_all('p')
-    filtered_paragraphs = [
-        p for p in paragraphs if 'appeared first on' not in p.get_text()]
-    filtered_paragraphs = [
-        p for p in filtered_paragraphs if len(p.get_text()) >= 10]
-    filtered_paragraphs = [
-        p for p in filtered_paragraphs if not re.search(r'\w', p.get_text()) is None]
-    return [p.get_text() for p in filtered_paragraphs]
+def chunk_content(post, max_length=150):
+    chunks = []
+    current_chunk = ""
+    for line in post.split("\n"):
+        if len(current_chunk) + len(line) <= max_length:
+            current_chunk += line + "\n"
+        else:
+            chunks.append(current_chunk)
+            current_chunk = line + "\n"
+    if len(current_chunk) > 0 and current_chunk != "\n":
+        chunks.append(current_chunk)
+    return chunks
 
 
 def main():
@@ -41,13 +43,18 @@ def main():
     parsed = []
     for item in items:
         title = item['title']
-        content = paragraphs(item['content:encoded'])
-        parsed.append({
-            'id': item['guid']['#text'],
-            'link': item['link'],
-            'title': title,
-            'content': content
-        })
+        chunks = chunk_content(item['content:encoded'])
+        print('Chunks for', title, len(chunks))
+        for chunk in chunks:
+            if chunk == '':
+                continue
+            parsed.append({
+                'id': item['guid']['#text'],
+                'link': item['link'],
+                'title': title,
+                'chunk': chunk,
+                'content': item['content:encoded']
+            })
 
     with open('scrapes/scraped.json', 'w') as f:
         json.dump(parsed, f, ensure_ascii=False)

@@ -7,13 +7,13 @@ Next, generate your scrapes from your wordpress blog:
 ```bash
 cd backend/scrape
 pipenv install
-pipenv run python scrape.py
+pipenv run python scrape.py https://your-wordpress-blog.com/feed/
 ```
 
 Then, run the following commands to set up the database:
 
 ```bash
 pipenv install
-pipenv run python migrate.py
+pipenv run python migrate.py up
 pipenv run python import.py scrape/scrapes/scraped.json
 ```

@@ -1,6 +1,11 @@
 const pg = require("pg");
 const openai = require("openai");
-const _ = require("lodash");
+
+const namespace = process.argv[3];
+
+if (!namespace) {
+  throw new Error("Namespace is required");
+}
 
 // Retrieve the DATABASE_URL from the environment variables
 const connectionString = process.env.DATABASE_URL;
@@ -22,22 +27,31 @@ const handler = async (config) => {
     const loadConfig = config.load;
 
     // iterate all posts
-    const posts = await client.query(
-      `SELECT id, ${loadConfig.column_names.title} as title, ${loadConfig.column_names.link} as link, ${loadConfig.column_names.body} as body FROM ${loadConfig.table_name}`
-    );
+    const chunks = await client.query(
+      `SELECT p.id as post_id,
+                  p.${loadConfig.column_names.title} as title,
+                  p.${loadConfig.column_names.link} as link,
+                  p.${loadConfig.column_names.body} as body,
+                  c.id as chunk_id,
+                  c.content as chunk_content
 
-    for (const post of posts.rows) {
-      // perform chunking
-      const chunks = chunkPost(post, loadConfig.chunk_max_length);
-      for (const chunk of chunks) {
-        const embedding = await generateEmbedding(chunk, config);
-        const sql = `INSERT INTO ${config.embeddings.table_name} (source_id, _namespace, vector) VALUES ($1, $2, $3)`;
-        await client.query(sql, [
-          post.id,
-          "posts",
-          JSON.stringify(embedding.vector),
-        ]);
+      FROM ${loadConfig.table_name} AS p
+      LEFT JOIN chunks AS c ON c.post_id = p.id
+      `
+    );
+    for (const chunk of chunks.rows) {
+      const content = chunk["chunk_content"];
+      if (content < 10) {
+        continue;
       }
+      const embedding = await generateEmbedding(content, config);
+      console.log("Embedding generated for", chunk["post_id"], content);
+      const sql = `INSERT INTO ${config.embeddings.table_name} (source_id, _namespace, vector) VALUES ($1, $2, $3)`;
+      await client.query(sql, [
+        chunk["post_id"],
+        namespace,
+        JSON.stringify(embedding.vector),
+      ]);
     }
     await client.end();
   } catch (err) {
@@ -46,23 +60,6 @@ const handler = async (config) => {
 };
 
 module.exports = handler;
-
-function chunkPost(post, max_length) {
-  const chunks = [];
-  let currentChunk = "";
-  post.body.split("\n").forEach((line) => {
-    if (currentChunk.length + line.length <= max_length) {
-      currentChunk += line + "\n";
-    } else {
-      chunks.push(currentChunk);
-      currentChunk = line + "\n";
-    }
-  });
-  if (currentChunk.length > 0 && currentChunk !== "\n") {
-    chunks.push(currentChunk);
-  }
-  return chunks;
-}
 
 async function generateEmbedding(chunk, options) {
   // openai generate embeddings and return vectors

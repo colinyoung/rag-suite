@@ -48,7 +48,7 @@ const handler = async (config) => {
       console.log("Embedding generated for", chunk["post_id"], content);
       const sql = `INSERT INTO ${config.embeddings.table_name} (source_id, _namespace, vector) VALUES ($1, $2, $3)`;
       await client.query(sql, [
-        chunk["post_id"],
+        chunk["chunk_id"],
         namespace,
         JSON.stringify(embedding.vector),
       ]);

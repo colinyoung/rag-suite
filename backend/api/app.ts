@@ -3,6 +3,7 @@ import bodyParser from "body-parser";
 import OpenAI from "openai";
 import { Client } from "pg";
 import dotenv from "dotenv";
+import fs from "fs";
 
 dotenv.config({
   path: "../.env",
@@ -44,24 +45,24 @@ app.post("/search", async (req: Request, res: Response) => {
     });
 
     const vector = response.data[0].embedding;
-    const vector_db_string = `ARRAY${JSON.stringify(vector)}::vector`;
 
     // Look up nearest neighbors from PostgreSQL vector database
     const nearestNeighborsQuery = `
       with _vectors as (
-        select id, source_id, vector
-            from public.embeddings e 
-        order by 1 - (vector <=> ${vector_db_string})
-        limit 5
+      select id, source_id, vector, 1 - (vector <=> $1) as similarity
+        from public.embeddings e 
+      order by similarity desc
+      limit 5
     )
-    select c.id, c.post_id, c.content 
-        from public.chunks c 
-        join _vectors v
-            on v.source_id = c.id
-        group by c.id;
+    select c.id, c.post_id, c.content, v.similarity
+      from public.chunks c 
+      join _vectors v
+        on v.source_id = c.id
     `;
 
-    const result = await client.query(nearestNeighborsQuery);
+    const result = await client.query(nearestNeighborsQuery, [
+      JSON.stringify(vector),
+    ]);
 
     // Return nearest neighbors as a JSON array
     res.json(result.rows);

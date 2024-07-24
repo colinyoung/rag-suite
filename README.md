@@ -17,3 +17,19 @@ pipenv install
 pipenv run python migrate.py up
 pipenv run python import.py scrape/scrapes/scraped.json
 ```
+
+Run the node cli to load embeddings for your imported data:
+
+```bash
+cd backend/embed
+npm install
+node cli.js load
+```
+
+Finally, run the backend server:
+
+```bash
+cd backend/api
+npm install
+npx ts-node app.ts
+```

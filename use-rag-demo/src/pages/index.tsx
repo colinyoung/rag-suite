@@ -9,7 +9,6 @@ const App = () => {
   const [query, setQuery] = useState("");
   const [topK, setTopK] = useState(5);
   const { search, matches } = useRAG("http://localhost:3000");
-  const [result, setResult] = useState<any>([]);
 
   useEffect(() => {
     search(query, { topK });

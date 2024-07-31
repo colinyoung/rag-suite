@@ -3,7 +3,7 @@ import bodyParser from "body-parser";
 import OpenAI from "openai";
 import { Client } from "pg";
 import dotenv from "dotenv";
-import fs from "fs";
+import cors from "cors";
 
 dotenv.config({
   path: "../.env",
@@ -11,6 +11,7 @@ dotenv.config({
 
 const app = express();
 app.use(bodyParser.json());
+app.use(cors());
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -24,6 +25,7 @@ client.connect();
 
 interface SearchRequestBody {
   query: string;
+  topK?: number;
 }
 
 client.on("query" as any, (query: any) => {
@@ -33,7 +35,8 @@ client.on("query" as any, (query: any) => {
 
 app.post("/search", async (req: Request, res: Response) => {
   try {
-    const { query }: SearchRequestBody = req.body;
+    const { query, topK = 5 }: SearchRequestBody = req.body;
+
     if (!query) {
       return res.status(400).json({ error: "Query parameter is required" });
     }
@@ -50,18 +53,20 @@ app.post("/search", async (req: Request, res: Response) => {
     const nearestNeighborsQuery = `
       with _vectors as (
       select id, source_id, vector, 1 - (vector <=> $1) as similarity
-        from public.embeddings e 
+        from public.embeddings e
       order by similarity desc
-      limit 5
+      limit $2
     )
     select c.id, c.post_id, c.content, v.similarity
-      from public.chunks c 
+      from public.chunks c
       join _vectors v
         on v.source_id = c.id
+      order by v.similarity desc
     `;
 
     const result = await client.query(nearestNeighborsQuery, [
       JSON.stringify(vector),
+      topK,
     ]);
 
     // Return nearest neighbors as a JSON array

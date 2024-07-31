@@ -1,0 +1,32 @@
+{
+  "name": "use-rag-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "use-rag-demo",
+  "author": "Colin Young",
+  "keywords": [
+    "gatsby"
+  ],
+  "scripts": {
+    "develop": "gatsby develop",
+    "start": "gatsby develop",
+    "build": "gatsby build",
+    "serve": "gatsby serve",
+    "clean": "gatsby clean",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@use-rag/hook": "../hook",
+    "gatsby": "^5.13.5",
+    "gatsby-plugin-react-helmet": "^6.13.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-helmet": "^6.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.19",
+    "typescript": "^5.3.3"
+  }
+}

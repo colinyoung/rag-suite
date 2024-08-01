@@ -1,8 +1,16 @@
-## setup
+# RAG Suite
 
-First, add your database url to the `.env` file. You can use the `.env.example` file as a template.
+Everything you need to get RAG into your application as quick as possible. Go from Wordpress blog posts to a fully functional RAG system in minutes.
 
-Next, generate your scrapes from your wordpress blog:
+## Demo Video
+
+[![RAG Suite Demo](https://img.youtube.com/vi/VMy1bK1s92A/0.jpg)](https://youtu.be/VMy1bK1s92A)
+
+## Setup
+
+First, add your database url to the `.env` file or set it in your environment. You can use the `.env.example` file as a template.
+
+Next, generate your chunks (to be embedded later) from your wordpress blog:
 
 ```bash
 cd backend/scrape
@@ -23,7 +31,7 @@ Run the node cli to load embeddings for your imported data:
 ```bash
 cd backend/embed
 npm install
-node cli.js load
+npm run load posts # The last argument is a "namespace", which is used to separate embeddings for different types of data
 ```
 
 Finally, run the backend server:
@@ -31,5 +39,5 @@ Finally, run the backend server:
 ```bash
 cd backend/api
 npm install
-npx ts-node app.ts
+npm run dev
 ```
